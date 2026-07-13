@@ -1,0 +1,6 @@
+numpy
+whisper
+yt_dlp
+setence_transformer
+faiss
+streamlit
