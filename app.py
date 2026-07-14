@@ -1,62 +1,94 @@
-import streamlit as st
-
+import gradio as gr
 from vector_DB import build_vector_store
 from rag_chat import chat
 
-st.set_page_config(
-    page_title="YouTube Retriever",
-    page_icon="🎥",
-    layout="wide"
-)
+# Store vector database globally
+vector_db = None
 
-st.title("🎥 YouTube Video Retriever")
+def process_video(url):
+    
+    global vector_db
 
-url = st.text_input("Enter YouTube URL")
+    if not url.strip():
+        return "❌ Please enter a YouTube URL."
 
-if st.button("Process Video"):
+    try:
+        vector_db = build_vector_store(url)
 
-    if url.strip() == "":
-        st.warning("Please enter a YouTube URL.")
+        if vector_db is None:
+            return "❌ Failed to process video."
 
-    else:
+        return "✅ Video processed successfully!"
 
-        try:
+    except Exception as e:
+        return f"❌ Error:\n{e}"
 
-            with st.spinner("Processing video..."):
 
-                vector_db = build_vector_store(url)
+def ask_question(question):
+    global vector_db
 
-                st.session_state["vector_db"] = vector_db
+    if vector_db is None:
+        return "Please process a YouTube video first."
 
-            st.success("Video processed successfully!")
+    if not question.strip():
+        return "Please enter a question."
 
-        except Exception as e:
+    try:
+        answer = chat(question, vector_db)
 
-            st.error(f"Error: {e}")
+        if answer is None:
+            return "No answer found."
 
-if "vector_db" in st.session_state:
+        return answer
 
-    st.divider()
+    except Exception as e:
+        return str(e)
 
-    st.subheader("Ask Questions")
 
-    question = st.text_input("Enter your question")
+with gr.Blocks(title="YouTube Video Retriever") as demo:
 
-    if st.button("Ask"):
+    gr.Markdown("# 🎥 YouTube Video Retriever")
 
-        if question.strip() == "":
+    with gr.Row():
+        url = gr.Textbox(
+            label="YouTube URL",
+            placeholder="Paste YouTube URL..."
+        )
 
-            st.warning("Please enter a question.")
+    process_btn = gr.Button("Process Video")
 
-        else:
+    status = gr.Textbox(
+        label="Status",
+        interactive=False
+    )
 
-            with st.spinner("Generating answer..."):
+    process_btn.click(
+        fn=process_video,
+        inputs=url,
+        outputs=status
+    )
 
-                answer = chat(
-                    question,
-                    st.session_state["vector_db"]
-                )
+    gr.Markdown("---")
 
-            st.write("### Answer")
+    question = gr.Textbox(
+        label="Ask Question",
+        placeholder="Ask anything about the video..."
+    )
 
-            st.write(answer)
+    ask_btn = gr.Button("Ask")
+
+    answer = gr.Textbox(
+        label="Answer",
+        lines=10
+    )
+
+    ask_btn.click(
+        fn=ask_question,
+        inputs=question,
+        outputs=answer
+    )
+
+demo.launch(server_name="0.0.0.0",
+            server_port=7860,
+            show_error=True
+           )
