@@ -1,11 +1,11 @@
 from retriever import retrieve_chunks
 from llm import (build_prompt,
-                 llm_model,
+                 get_llm,
                  generate_answer,
                  validate
 )
 
-model = llm_model()
+model = get_llm()
 
 def chat(question, vector_db):
     if question is None:
@@ -29,6 +29,8 @@ def chat(question, vector_db):
     if prompt is None:
         print("Prompt not yet found in the process")
         return None
+
+    model = get_llm()
 
     answer = generate_answer(model, prompt)
 
