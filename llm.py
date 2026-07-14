@@ -1,5 +1,7 @@
 from transformers import pipeline
 
+model = None
+
 def receive_context(context):
     if context is None:
         print("No context found")
@@ -76,6 +78,14 @@ def llm_model():
 
         return None
 
+def get_llm():
+    global model
+
+    if model is None:
+        model = llm_model()
+
+    return model
+    
 def generate_answer(model, prompt):
     if model is None:
         print("The model is not present")
