@@ -38,7 +38,7 @@ class VectorData:
 
         return res
 
-from chunk import chunk_model
+from chunking import chunk_model
 from embedding import create_embedded
 
 def build_vector_store(transcript):
